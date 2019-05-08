@@ -1,23 +1,215 @@
 package it.polito.tdp.dizionariograph.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-public class Model {
+import org.jgrapht.Graph;
+import org.jgrapht.event.ConnectedComponentTraversalEvent;
+import org.jgrapht.event.EdgeTraversalEvent;
+import org.jgrapht.event.TraversalListener;
+import org.jgrapht.event.VertexTraversalEvent;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleDirectedGraph;
+import org.jgrapht.traverse.BreadthFirstIterator;
+import org.jgrapht.traverse.GraphIterator;
 
-	public void createGraph(int numeroLettere) {
+import it.polito.tdp.dizionariograph.db.WordDAO;
 
-		System.err.println("createGraph -- TODO");
+
+public class Model 
+{
+	//classe privata del modello, dato che tanto la usa solo lui
+	private class EdgeTraversedGraphListener implements TraversalListener<String, DefaultEdge>
+	{
+
+		@Override
+		public void connectedComponentFinished(ConnectedComponentTraversalEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void connectedComponentStarted(ConnectedComponentTraversalEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void edgeTraversed(EdgeTraversalEvent<DefaultEdge> ev) 
+		{
+			String sourceVertex = grafo.getEdgeSource(ev.getEdge());
+			String targetVertex = grafo.getEdgeTarget(ev.getEdge());
+			
+			/* se il grafo è orientato, allora souce  == parent, target == child */
+			/* se il grafo non è orientato, potrebbe anche esser al contratio */
+			
+			if ( !backVisit.containsKey(targetVertex) && backVisit.containsKey(sourceVertex) )
+				backVisit.put(targetVertex, sourceVertex);
+			else if ( !backVisit.containsKey(sourceVertex) && backVisit.containsKey(targetVertex) )
+				backVisit.put(sourceVertex, targetVertex); 
+			
+		}
+
+		@Override
+		public void vertexFinished(VertexTraversalEvent<String> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void vertexTraversed(VertexTraversalEvent<String> arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+	}
+		
+	//grafo orientato non pesato
+	private Graph<String, DefaultEdge> grafo;
+	private Map<String, String>backVisit;
+	
+	
+	
+
+	public void createGraph(int numeroLettere) 
+	{
+		/*
+		 * Creo grafo che abbia:
+		 * - Vertici: tutte le parole del dizionario di una certa lunghezza
+		 * - Archi: se parola differisce da un'altra parola per una lettera
+		 */
+		
+		WordDAO dao = new WordDAO();
+		List<String> wordsFixedLength = dao.getAllWordsFixedLength(numeroLettere);
+		
+		
+		// creo oggetto grafo
+		this.grafo = new SimpleDirectedGraph<>(DefaultEdge.class);
+		// creo i vertici del grafo
+		//Graphs.addAllVertices(this.grafo, wordsFixedLength);
+		
+		// Debug - creo dummy grafo
+		//vertici
+		grafo.addVertex("casa");
+		grafo.addVertex("cara");
+		grafo.addVertex("case");
+		grafo.addVertex("caro");
+		grafo.addVertex("care");
+		grafo.addVertex("cura");
+		grafo.addVertex("fila");
+		grafo.addVertex("file");
+		grafo.addVertex("pile");
+		
+		//creo gli archi
+		//M1 - Via SQL - troppe query 
+		// 2 lettere ci mette < 1 minuti
+		// 4 lettere ci può mettere 10 minuti
+		/*String aus = "";
+		for (String parolaInserita : grafo.vertexSet())
+		{
+			for (int i = 1; i <= parolaInserita.length(); i++)
+			{
+				 aus = parolaInserita.substring(0, i-1) + '_' + parolaInserita.substring(i, parolaInserita.length());
+				
+				 List<String> neighbours =dao.findNeighbours(aus);
+				 
+				 //creo archi
+				 for (String neighbour : neighbours)
+				 {
+					 if (parolaInserita.compareTo(neighbour) != 0)
+						 this.grafo.addEdge(parolaInserita, neighbour);
+				 }
+			}
+		}*/
+		
+		//M2 - via Java - molto più veloce
+		for (String parola : grafo.vertexSet())
+		{
+			for (String possibileVicino : grafo.vertexSet())
+			{
+				//devo controllare se stringe sono simile
+				//controllo se non esiste già arco
+				if (similari(parola, possibileVicino))
+				{
+					if (grafo.getAllEdges(parola, possibileVicino).size() == 0 && grafo.getAllEdges(possibileVicino, parola).size() == 0)
+						this.grafo.addEdge(parola, possibileVicino);
+				}
+			}
+		}
+		
+		System.out.println(grafo.edgeSet());
+	}
+	
+	private boolean similari(String word1, String word2) 
+	{
+		boolean primaDifferenza = true;
+	    if(word1.equals(word2))//non voglio loop nel grafo
+	        return false;
+
+        for(int i = 0; i < word1.length(); i++) 
+        {
+            if(word1.charAt(i) != word2.charAt(i))
+            { 
+            	if (primaDifferenza)
+            		primaDifferenza = false;
+            	else
+            		return false;
+            }
+        }
+        return true;
 	}
 
-	public List<String> displayNeighbours(String parolaInserita) {
-
-		System.err.println("displayNeighbours -- TODO");
-		return new ArrayList<String>();
+	//voglio trovare solo i vicini della parola inserita (analisi per ampiezza)
+	public List<String> displayNeighbours(String parolaInserita) 
+	{
+		// visita per ampiezza
+		ArrayList<String> visitaCompletaAlbero = new ArrayList<String>();
+		backVisit = new HashMap<>() ;
+		//visita completa - io voglio solo primo grado
+		if (grafo.containsVertex(parolaInserita))
+		{
+			GraphIterator<String, DefaultEdge> it = new BreadthFirstIterator<>(this.grafo, parolaInserita);
+			it.addTraversalListener(new EdgeTraversedGraphListener());
+			
+			backVisit.put(parolaInserita, null); //devo inserire manualmente il punto di partenza (che non ha padre -> null)
+			while(it.hasNext())
+			{
+				visitaCompletaAlbero.add(it.next()) ;
+			}
+			
+			//soluzione tampone - vicini di grado 1
+			List<String>result = new ArrayList<String>();
+			
+			Set<DefaultEdge> set = grafo.edgesOf(parolaInserita);
+			for (DefaultEdge e : set)
+			{
+				result.add(grafo.getEdgeTarget(e));
+			}
+			return result;
+		}
+		else
+			return null;
 	}
 
-	public int findMaxDegree() {
-		System.err.println("findMaxDegree -- TODO");
-		return -1;
+	public String findMaxDegree() 
+	{
+		int gradoMax = 0;
+		String verticeMax = "";
+		for (String v : grafo.vertexSet())
+		{
+			if (grafo.degreeOf(v) > gradoMax)
+			{
+				gradoMax = grafo.degreeOf(v);
+				verticeMax = v;
+			}
+		}
+		if (verticeMax.compareTo("") != 0)
+		{
+			List<String>vicini = displayNeighbours(verticeMax);
+			return verticeMax + " grado : " + gradoMax + "\nvicini: " + vicini;
+		}
+		return null;
 	}
 }

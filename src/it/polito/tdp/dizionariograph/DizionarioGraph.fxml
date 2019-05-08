@@ -43,13 +43,13 @@
             </HBox>
             <HBox>
                <children>
-                  <Button fx:id="btnGeneraGrafo" mnemonicParsing="false" text="Genera Grafo" />
-                  <Button fx:id="btnTrovaVicini" mnemonicParsing="false" text="Trova Vicini">
+                  <Button fx:id="btnGeneraGrafo" mnemonicParsing="false" onAction="#doGeneraGrafo" text="Genera Grafo" />
+                  <Button fx:id="btnTrovaVicini" mnemonicParsing="false" onAction="#doTrovaVicini" text="Trova Vicini">
                      <HBox.margin>
                         <Insets left="10.0" />
                      </HBox.margin>
                   </Button>
-                  <Button fx:id="btnTrovaGradoMax" mnemonicParsing="false" text="Trova Grado Max">
+                  <Button fx:id="btnTrovaGradoMax" mnemonicParsing="false" onAction="#doTrovaGradoMax" text="Trova Grado Max">
                      <HBox.margin>
                         <Insets left="10.0" />
                      </HBox.margin>
@@ -61,7 +61,7 @@
                   <Insets top="10.0" />
                </VBox.margin>
             </TextArea>
-            <Button fx:id="btnReset" mnemonicParsing="false" text="Reset">
+            <Button fx:id="btnReset" mnemonicParsing="false" onAction="#doReset" text="Reset">
                <VBox.margin>
                   <Insets top="10.0" />
                </VBox.margin>

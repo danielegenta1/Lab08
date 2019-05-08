@@ -1,12 +1,18 @@
 package it.polito.tdp.dizionariograph;
 
+import java.util.List;
+
+import it.polito.tdp.dizionariograph.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 
-public class DizionarioGraphController {
+public class DizionarioGraphController 
+{
+	private Model model;
+	int numeroLettere;
 
     @FXML
     private TextField txtNumeroLettere;
@@ -30,23 +36,49 @@ public class DizionarioGraphController {
     private Button btnReset;
 
     @FXML
-    void doGeneraGrafo(ActionEvent event) {
+    void doGeneraGrafo(ActionEvent event) 
+    {
+    	if (txtNumeroLettere.getText() != "" && txtNumeroLettere.getText().matches("^[0-9]+$"))
+    	{
+    		numeroLettere = Integer.parseInt(txtNumeroLettere.getText());
+    		model.createGraph(numeroLettere);
+    	}
+    	else
+    		txtResult.setText("Numero caratteri non valido!");
+    }
+
+    @FXML
+    void doReset(ActionEvent event) 
+    {
 
     }
 
     @FXML
-    void doReset(ActionEvent event) {
-
+    void doTrovaGradoMax(ActionEvent event) 
+    {
+    	String gradoMax = model.findMaxDegree();
+    	txtResult.appendText("\n"+gradoMax);
     }
 
     @FXML
-    void doTrovaGradoMax(ActionEvent event) {
-
+    void doTrovaVicini(ActionEvent event) 
+    {
+    	String parola = txtParola.getText();
+    	if (parola.length() == numeroLettere)
+    	{
+    		List<String> vicini = model.displayNeighbours(parola);
+    		txtResult.appendText("Lista parole direttamente collegate a " + parola +
+    				"\n" + vicini +
+    				"\n" + vicini.size() + " elementi compatibili");
+    	}
+    	else
+    		txtResult.appendText("Lunghezza parola errata!");
     }
 
-    @FXML
-    void doTrovaVicini(ActionEvent event) {
-
-    }
+	public void setModel(Model model) 
+	{
+		this.model = model;
+		
+	}
 
 }
