@@ -40,8 +40,15 @@ public class DizionarioGraphController
     {
     	if (txtNumeroLettere.getText() != "" && txtNumeroLettere.getText().matches("^[0-9]+$"))
     	{
+    		try 
+    		{
     		numeroLettere = Integer.parseInt(txtNumeroLettere.getText());
     		model.createGraph(numeroLettere);
+    		}
+    		catch (NumberFormatException nfe) 
+    		{
+    			txtResult.setText("Inserire un numero corretto di lettere!");
+    		}
     	}
     	else
     		txtResult.setText("Numero caratteri non valido!");
@@ -50,7 +57,9 @@ public class DizionarioGraphController
     @FXML
     void doReset(ActionEvent event) 
     {
-
+    	txtResult.clear();
+    	txtNumeroLettere.clear();
+    	txtParola.clear();
     }
 
     @FXML

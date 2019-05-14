@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.event.ConnectedComponentTraversalEvent;
 import org.jgrapht.event.EdgeTraversalEvent;
 import org.jgrapht.event.TraversalListener;
@@ -21,54 +22,11 @@ import it.polito.tdp.dizionariograph.db.WordDAO;
 
 public class Model 
 {
-	//classe privata del modello, dato che tanto la usa solo lui
-	private class EdgeTraversedGraphListener implements TraversalListener<String, DefaultEdge>
-	{
 
-		@Override
-		public void connectedComponentFinished(ConnectedComponentTraversalEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void connectedComponentStarted(ConnectedComponentTraversalEvent arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void edgeTraversed(EdgeTraversalEvent<DefaultEdge> ev) 
-		{
-			String sourceVertex = grafo.getEdgeSource(ev.getEdge());
-			String targetVertex = grafo.getEdgeTarget(ev.getEdge());
-			
-			/* se il grafo è orientato, allora souce  == parent, target == child */
-			/* se il grafo non è orientato, potrebbe anche esser al contratio */
-			
-			if ( !backVisit.containsKey(targetVertex) && backVisit.containsKey(sourceVertex) )
-				backVisit.put(targetVertex, sourceVertex);
-			else if ( !backVisit.containsKey(sourceVertex) && backVisit.containsKey(targetVertex) )
-				backVisit.put(sourceVertex, targetVertex); 
-			
-		}
-
-		@Override
-		public void vertexFinished(VertexTraversalEvent<String> arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		@Override
-		public void vertexTraversed(VertexTraversalEvent<String> arg0) {
-			// TODO Auto-generated method stub
-			
-		}
-	}
 		
 	//grafo orientato non pesato
 	private Graph<String, DefaultEdge> grafo;
-	private Map<String, String>backVisit;
+	//private Map<String, String>backVisit;
 	
 	
 	
@@ -88,11 +46,11 @@ public class Model
 		// creo oggetto grafo
 		this.grafo = new SimpleDirectedGraph<>(DefaultEdge.class);
 		// creo i vertici del grafo
-		//Graphs.addAllVertices(this.grafo, wordsFixedLength);
+		Graphs.addAllVertices(this.grafo, wordsFixedLength);
 		
 		// Debug - creo dummy grafo
 		//vertici
-		grafo.addVertex("casa");
+		/*grafo.addVertex("casa");
 		grafo.addVertex("cara");
 		grafo.addVertex("case");
 		grafo.addVertex("caro");
@@ -100,7 +58,7 @@ public class Model
 		grafo.addVertex("cura");
 		grafo.addVertex("fila");
 		grafo.addVertex("file");
-		grafo.addVertex("pile");
+		grafo.addVertex("pile");*/
 		
 		//creo gli archi
 		//M1 - Via SQL - troppe query 
@@ -162,9 +120,10 @@ public class Model
 	}
 
 	//voglio trovare solo i vicini della parola inserita (analisi per ampiezza)
+	// POSSO SOSTITUIRE TUTTO QUESTO (VISITA IN AMPIEZZA CON UN METODO) con un metodo apposito -> vedi sol. prof
 	public List<String> displayNeighbours(String parolaInserita) 
 	{
-		// visita per ampiezza
+		/*// visita per ampiezza
 		ArrayList<String> visitaCompletaAlbero = new ArrayList<String>();
 		backVisit = new HashMap<>() ;
 		//visita completa - io voglio solo primo grado
@@ -190,7 +149,18 @@ public class Model
 			return result;
 		}
 		else
-			return null;
+			return null;*/
+		
+		//if (numeroLettere != parolaInserita.length())
+		//	throw new RuntimeException("La parola inserita ha una lunghezza differente rispetto al numero inserito.");
+
+		List<String> parole = new ArrayList<String>();
+
+		// Ottengo la lista dei vicini di un vertice
+		parole.addAll(Graphs.neighborListOf(this.grafo, parolaInserita));
+
+		// Ritorno la lista dei vicini
+		return parole;
 	}
 
 	public String findMaxDegree() 
@@ -205,6 +175,7 @@ public class Model
 				verticeMax = v;
 			}
 		}
+		// POSSO SOSTITUIRE TUTTO QUESTO (VISITA IN AMPIEZZA CON UN METODO) con un metodo apposito -> vedi sol. prof
 		if (verticeMax.compareTo("") != 0)
 		{
 			List<String>vicini = displayNeighbours(verticeMax);
